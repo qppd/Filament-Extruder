@@ -133,17 +133,15 @@ double getTHERMISTORTemperature()
 2. Convert to resistance: CURRENT = 1023 / CURRENT - 1
                           CURRENT = 100000 / CURRENT
 3. Apply Beta equation:
-   TEMP = CURRENT / RESISTANCE_REF        → R/Ro
-   TEMP = ln(TEMP)                        → ln(R/Ro)
-   TEMP = TEMP / BETA                     → (1/B) * ln(R/Ro)
-   TEMP = TEMP + 1/(TEMPERATURE_REF+273.15) → + 1/To
-   TEMP = 1 / TEMP                        → Kelvin
-   TEMP = TEMP - 273.15                   → Celsius
+   TEMPERATURE = CURRENT / RESISTANCE_REF     → R/Ro
+   TEMPERATURE = ln(TEMPERATURE)              → ln(R/Ro)
+   TEMPERATURE = TEMPERATURE / BETA           → (1/B) × ln(R/Ro)
+   TEMPERATURE = TEMPERATURE + 1/(T_REF+273.15) → + 1/To
+   TEMPERATURE = 1 / TEMPERATURE              → Kelvin
+   TEMPERATURE = TEMPERATURE - 273.15         → Celsius
 4. Store in CURRENT_TEMPERATURE
 5. Return
 ```
-
-> **Note:** Line 28 has a bug — it uses `CURRENT_TEMPERATURE` instead of `TEMPERATURE` in the `log()` call. See [`pid-tuning.md`](./pid-tuning.md#thermistor-bug).
 
 ---
 
@@ -171,14 +169,14 @@ void operateRELAY(int RELAY, boolean OPENED)
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `RELAY` | int | Relay pin number (currently only `RELAY_1 = 7`) |
-| `OPENED` | boolean | `true` → relay ON (LOW), `false` → relay OFF (HIGH) |
+| `OPENED` | boolean | `true` → relay ON (writes LOW), `false` → relay OFF (writes HIGH) |
 
 ---
 
 ## PID_CONFIG.h — PID Temperature Controller
 
 **Library:** `PID_v1` by Brett Beauregard  
-**Tuning:** P=4, I=0, D=22  
+**Tuning:** P=4, I=0.5, D=22  
 **Setpoint:** 245°C
 
 ### Constants
@@ -186,7 +184,7 @@ void operateRELAY(int RELAY, boolean OPENED)
 | Constant | Value | Description |
 |----------|-------|-------------|
 | `P` | 4 | Proportional gain |
-| `I` | 0 | Integral gain (disabled) |
+| `I` | 0.5 | Integral gain (eliminates steady-state error) |
 | `D` | 22 | Derivative gain |
 | `SETPOINT` | 245 | Target temperature (°C) |
 
@@ -214,10 +212,11 @@ Runs `pid.Compute()` and controls the relay based on output.
 
 ```cpp
 if (output > 0) {
-    operateRELAY(RELAY_1, HIGH);  // BUG: should be LOW
+    operateRELAY(RELAY_1, true);  // true → LOW → heater ON
 } else {
-    operateRELAY(RELAY_1, HIGH);  // Always HIGH
+    operateRELAY(RELAY_1, false); // false → HIGH → heater OFF
 }
 ```
 
-> **Bug:** Both branches set the relay to `HIGH` (OFF). The heater is never turned ON. With I=0 (no integral), the PID cannot correct. See [`pid-tuning.md`](./pid-tuning.md) for the fix.
+- `output > 0`: Temperature below setpoint → heater ON
+- `output ≤ 0`: Temperature at or above setpoint → heater OFF

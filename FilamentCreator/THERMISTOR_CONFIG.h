@@ -25,7 +25,7 @@ double getTHERMISTORTemperature() {
 
   //Calculation of temperature according to the relation for the beta factor
   TEMPERATURE = CURRENT / RESISTANCE_REF;           // (R/Ro)
-  TEMPERATURE = log(CURRENT_TEMPERATURE);           // ln(R/Ro)
+  TEMPERATURE = log(TEMPERATURE);                   // ln(R/Ro)
   TEMPERATURE /= BETA;                              // 1/B * ln(R/Ro)
   TEMPERATURE += 1.0 / (TEMPERATURE_REF + 273.15);  // + (1/To)
   TEMPERATURE = 1.0 / TEMPERATURE;                  // The inverted value

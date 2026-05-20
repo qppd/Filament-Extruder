@@ -41,14 +41,15 @@ The firmware is split into 5 files — one `.ino` main file and four `.h` config
                  │ double CURRENT_TEMPERATURE
                  ▼
           ┌──────────────┐
-          │   PID         │  P=4, I=0, D=22
+          │   PID         │  P=4, I=0.5, D=22
           │   Controller   │  SETPOINT = 245°C
           └──────┬───────┘
                  │ double output (0–5000)
                  ▼
           ┌──────────────┐
           │   Relay       │  output > 0 → RELAY_1 ON
-          │   (pin 7)     │  (active LOW via operateRELAY)
+          │   (pin 7)     │  output ≤ 0 → RELAY_1 OFF
+          │   active LOW  │
           └──────┬───────┘
                  │
                  ▼
@@ -65,7 +66,7 @@ The firmware is split into 5 files — one `.ino` main file and four `.h` config
 2. Display temperature on LCD ("245C")
 3. Run PID.compute() → adjusts `output` variable
 4. If output > 0 → relay ON (heater active)
-   If output ≤ 0 → relay ON (NOTE: currently always ON — see pid-tuning.md)
+   If output ≤ 0 → relay OFF
 5. Repeat
 ```
 
@@ -87,7 +88,3 @@ The firmware is split into 5 files — one `.ino` main file and four `.h` config
 |---------|---------|---------|
 | `LiquidCrystal_I2C` | any | I2C 16x2 LCD driver |
 | `PID_v1` | Brett Beauregard | PID control algorithm |
-
-## Known Issues
-
-**See [`docs/pid-tuning.md`](./pid-tuning.md)** — the `computePID()` function has both relay branches set to `HIGH` (always-on). With I=0, there's no integral term to bring the heater to setpoint properly. The PID will oscillate or never settle.

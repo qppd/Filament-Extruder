@@ -1,43 +1,3 @@
-# Boot Sequence & Control Loop Flow
-
-## Startup Sequence
-
-```
-Power ON
-  │
-  ▼
-┌─────────────────────────────────────────────┐
-│ 1. Serial.begin(9600)                       │
-│    Initialize serial monitor                │
-├─────────────────────────────────────────────┤
-│ 2. initLCD()                                │
-│    - lcd.init()                             │
-│    - lcd.backlight()                        │
-├─────────────────────────────────────────────┤
-│ 3. Splash Screen (3 seconds)                │
-│    Line 0: "Plastic Filament"               │
-│    Line 1: "     Maker      "               │
-│    → clearLCD()                             │
-├─────────────────────────────────────────────┤
-│ 4. initRELAY()                              │
-│    - pinMode(RELAY_1, OUTPUT)               │
-├─────────────────────────────────────────────┤
-│ 5. initTHERMISTOR()                         │
-│    - analogReference(EXTERNAL)              │
-├─────────────────────────────────────────────┤
-│ 6. initPID()                                │
-│    - pid.SetMode(AUTOMATIC)                 │
-│    - pid.SetOutputLimits(0, 5000)           │
-├─────────────────────────────────────────────┤
-│ 7. Display Setpoint                         │
-│    Line 0: "PID Control:245C"               │
-│    Line 1: "TEMP:"                          │
-└─────────────────────────────────────────────┘
-  │
-  ▼
-  Enter loop()
-```
-
 ## Control Loop (loop function)
 
 ```
@@ -66,7 +26,7 @@ Power ON
 │  │ computePID()                    │    │
 │  │ → pid.Compute()                 │    │
 │  │ → If output > 0: relay ON       │    │
-│  │   (BUG: currently always HIGH)  │    │
+│  │   If output ≤ 0: relay OFF      │    │
 │  └──────────────┬──────────────────┘    │
 │                 │                        │
 │                 └────── loop back ───────┘
@@ -114,7 +74,7 @@ Current Temperature(double):30.55C
 ### Temperature rises above 245°C
 1. PID error goes negative
 2. `pid.Compute()` → `output` decreases → approaches 0
-3. `computePID()` → relay turns OFF (HIGH) — **currently always HIGH due to bug**
+3. `computePID()` → relay turns OFF (HIGH)
 4. Heater stops
 5. Temperature drops
 6. PID increases `output` → relay turns ON
@@ -128,6 +88,6 @@ Current Temperature(double):30.55C
 
 ### At exactly 245°C
 1. PID error = 0
-2. With I=0, output = 0 (no correction)
-3. Relay OFF — heater idle
+2. With I=0.5, output may hold a small steady-state value
+3. Relay pulses to maintain temperature
 4. Any disturbance → PID reacts

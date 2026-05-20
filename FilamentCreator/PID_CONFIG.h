@@ -1,7 +1,7 @@
 #include <PID_v1.h>
 
 double P = 4;
-double I = 0;
+double I = 0.5;
 double D = 22;
 
 double SETPOINT = 245;
@@ -19,8 +19,8 @@ void initPID() {
 void computePID() {
   pid.Compute();
   if (output > 0) {
-    operateRELAY(RELAY_1, HIGH); 
+    operateRELAY(RELAY_1, true);  // true = OPENED → LOW → heater ON
   } else {
-    operateRELAY(RELAY_1, HIGH); 
+    operateRELAY(RELAY_1, false); // false → HIGH → heater OFF
   }
 }
